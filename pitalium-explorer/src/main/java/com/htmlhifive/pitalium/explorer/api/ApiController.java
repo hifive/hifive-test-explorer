@@ -15,9 +15,13 @@
  */
 package com.htmlhifive.pitalium.explorer.api;
 
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -32,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.google.common.base.Splitter;
 import com.htmlhifive.pitalium.explorer.changelog.ChangeRecord;
 import com.htmlhifive.pitalium.explorer.entity.Screenshot;
 import com.htmlhifive.pitalium.explorer.entity.TestExecutionAndEnvironment;
@@ -84,11 +89,10 @@ public class ApiController {
 
 	@RequestMapping(value = "_screenshots/images", method = RequestMethod.GET, produces="application/json;charset=utf-8")
 	@ResponseBody
-	public ResponseEntity<Map<String, byte[]>> getImages(
-			@RequestParam(value = "expected", defaultValue = "") String expectedFilePath,
-			@RequestParam(value = "target", defaultValue = "") String targetFilePath
-			){
-		Map<String, byte[]> map = service.getImages(expectedFilePath, targetFilePath);
+	public ResponseEntity<Map<String, byte[]>> getImages(HttpServletRequest request, HttpServletResponse response) throws Exception{
+		String strQuery = URLDecoder.decode(request.getQueryString(), "UTF-8");
+		Map<String, String> mapQuery = Splitter.on("&").trimResults().withKeyValueSeparator("=").split(strQuery);
+		Map<String, byte[]> map = service.getImages(mapQuery.get("expected"), mapQuery.get("target"));
 		return new ResponseEntity<Map<String, byte[]>>(map, HttpStatus.OK);
 	}
 
