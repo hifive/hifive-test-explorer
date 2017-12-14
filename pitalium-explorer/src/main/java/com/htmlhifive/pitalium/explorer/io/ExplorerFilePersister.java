@@ -783,13 +783,24 @@ public class ExplorerFilePersister extends FilePersister implements ExplorerPers
 		Area area = new Area();
 		area.setAreaId(areaId);
 		area.setTargetId(targetId);
-		area.setSelectorType(screenAreaResult.getSelector().getType().name());
-		area.setSelectorValue(screenAreaResult.getSelector().getValue());
-		area.setSelectorIndex(screenAreaResult.getSelector().getIndex());
-		area.setX(screenAreaResult.getRectangle().getX());
-		area.setY(screenAreaResult.getRectangle().getY());
-		area.setWidth(screenAreaResult.getRectangle().getWidth());
-		area.setHeight(screenAreaResult.getRectangle().getHeight());
+
+		// 領域のセレクタの情報
+		IndexDomSelector selector = screenAreaResult.getSelector();
+		if (selector != null) {
+			area.setSelectorType(selector.getType().name());
+			area.setSelectorValue(selector.getValue());
+			area.setSelectorIndex(selector.getIndex());
+		}
+
+		// 矩形領域の情報
+		RectangleArea rectangle = screenAreaResult.getRectangle();
+		if (rectangle != null ) {
+			area.setX(rectangle.getX());
+			area.setY(rectangle.getY());
+			area.setWidth(rectangle.getWidth());
+			area.setHeight(rectangle.getHeight());
+		}
+
 		area.setExcluded(excluded);
 		return area;
 	}
@@ -896,8 +907,11 @@ public class ExplorerFilePersister extends FilePersister implements ExplorerPers
 
 		Target target = getTarget(screenshotId, targetId);
 		Area area = target.getArea();
-		IndexDomSelector selector = new IndexDomSelector(SelectorType.valueOf(area.getSelectorType()),
-				area.getSelectorValue(), area.getSelectorIndex());
+		IndexDomSelector selector = null;
+		if(area.getSelectorType() != null) {
+			selector = new IndexDomSelector(SelectorType.valueOf(area.getSelectorType()),
+					area.getSelectorValue(), area.getSelectorIndex());
+		}
 		RectangleArea rectangleArea = new RectangleArea(area.getX(), area.getY(), area.getWidth(), area.getHeight());
 		Map<String, String> map = new HashMap<>();
 		TestEnvironment env = screenshot.getTestEnvironment();
