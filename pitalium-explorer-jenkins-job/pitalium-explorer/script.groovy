@@ -9,6 +9,17 @@ node {
         url: 'https://github.com/hifive/hifive-pitalium-explorer.git'
     )
 
+    // Overwrite with new hifive-res_home's value
+    setResourceHomePath(pwd() + '/pitalium-explorer/build.properties')
+
+    // Checkout hifive-res
+    dir(HIFIVE_RES_HOME) {
+        git(
+            branch: 'master',
+            url: 'https://github.com/hifive/hifive-res.git'
+        )
+    }
+
 	stage('ライブラリをダウンロード')
 	def antHome = tool(name: 'Default_Ant')
     withEnv(["ANT_OPTS=-Dhttp.proxyHost=${IVY_PROXY_HOST} -Dhttp.proxyPort=${IVY_PROXY_PORT} -Dhttp.proxyUser=${IVY_PROXY_USER} -Dhttp.proxyPassword=${IVY_PROXY_PASSWORD}"]) {
@@ -27,4 +38,18 @@ node {
     if(BACKUP_PATH != '') {
         bat("copy /Y pitalium-explorer\\build\\pitalium-explorer.war ${BACKUP_PATH} && exit 0")
     }
+}
+
+/**
+ * Set new hifive-res_home's value into build.properties 
+ */
+def setResourceHomePath(filePath) {
+    // Read properties
+	Properties props = new Properties()
+    File propsFile = new File(filePath)
+    props.load(propsFile.newDataInputStream())
+
+    // Overwrite properties
+    props.setProperty('hifive-res_home', HIFIVE_RES_HOME)
+    props.store(propsFile.newWriter(), '')
 }

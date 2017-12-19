@@ -38,6 +38,11 @@
 &lt;Relative path&gt;: not recommended!</description>
           <defaultValue>C:\pitalium-explorer.war</defaultValue>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>HIFIVE_RES_HOME</name>
+          <description></description>
+          <defaultValue>C:/hifive/workspace/hifive-res</defaultValue>
+        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
@@ -55,8 +60,17 @@ node {
         branch: BRANCH_NAME,
         url: &apos;https://github.com/hifive/hifive-pitalium-explorer.git&apos;
     )
-    bat(&quot;copy /Y C:\\ci_build.xml pitalium-explorer\\ci_build.xml&quot;)
-    bat(&quot;copy /Y C:\\ivy.xml pitalium-explorer\\ivy.xml&quot;)
+
+    // Overwrite with new hifive-res_home&apos;s value
+    setResourceHomePath(pwd() + &apos;/pitalium-explorer/build.properties&apos;)
+
+    // Checkout hifive-res
+    dir(HIFIVE_RES_HOME) {
+        git(
+            branch: &apos;master&apos;,
+            url: &apos;https://github.com/hifive/hifive-res.git&apos;
+        )
+    }
 
 	stage(&apos;ライブラリをダウンロード&apos;)
 	def antHome = tool(name: &apos;Default_Ant&apos;)
@@ -76,6 +90,20 @@ node {
     if(BACKUP_PATH != &apos;&apos;) {
         bat(&quot;copy /Y pitalium-explorer\\build\\pitalium-explorer.war ${BACKUP_PATH} &amp;&amp; exit 0&quot;)
     }
+}
+
+/**
+ * Set new hifive-res_home&apos;s value into build.properties 
+ */
+def setResourceHomePath(filePath) {
+    // Read properties
+	Properties props = new Properties()
+    File propsFile = new File(filePath)
+    props.load(propsFile.newDataInputStream())
+
+    // Overwrite properties
+    props.setProperty(&apos;hifive-res_home&apos;, HIFIVE_RES_HOME)
+    props.store(propsFile.newWriter(), &apos;&apos;)
 }</script>
     <sandbox>false</sandbox>
   </definition>
